@@ -1,10 +1,6 @@
 /**
  * Run to have fun :))
  *
- * Task description:
- *      Priprav jednoduchou aplikaci v Kotlinu ktera bude resit rozklad libovolneho celeho cisla [1..100] na prvocisla.
- *      Reseni vsupu a vystupu je nechan na resiteli. Duraz by mel byt kladen na srozumitelnost a udrzitelnost kodu.
- *
  * @author  Petr Binčík
  * */
 fun main() {
@@ -13,26 +9,20 @@ fun main() {
 
     // Main infinite loop to retrieve numbers and calculate it / or print errors
     while (true) {
+        println("_____________________________")
+        println("Enter number or press \"q\": ")
         val inputLine = readLineText()
+        // Quit condition to exit console loop
         if (inputLine == "q") {
             println("Already quiting? Okay, noted...")
             break
         }
 
         val num = checkAndMapNumber(inputLine)
-        if (num.isSuccess) num
-            .map { calculatePrimeFactorization(it) }
-            .getOrThrow()
-            .joinToString(
-                separator = " * ",
-                prefix = "Prime factorization of \"${num.getOrNull()}\" is [ ",
-                postfix = " ]"
-            )
-            .let { println(it) }
-        else num
-            .exceptionOrNull()
-            ?.let { println("${it.message}\n") }
-            ?: println("Some magick happened ...")
+        val resultString = getResultString(num)
+
+        // Prints the final result to console
+        println(resultString)
     }
 
     println("Thank you for using my dummy function. See you later :)")
@@ -59,14 +49,14 @@ private fun StringBuilder.appendLn(text: String) = this
     .append(text)
     .append("\n")
 
-private fun readLineText(): String? {
-    println("_____________________________")
-    println("Enter number or press \"q\": ")
-    return readLine()?.trim()
-}
+/**
+ * Extension method for Kotlin's readLine - returns trimmed string (or null if nothing was entered
+ * */
+private fun readLineText(): String? = readLine()?.trim()
 
 /**
  * Checks user input. Function returns any "error" during the check.
+ * For moving the error around, Kotlin Result wrapper is used - easier of mapping the result for console.
  * Function checks for Integers. Number has the following preconditions:
  *  - input must not be null
  *  - input must be Integer
@@ -89,6 +79,28 @@ private fun checkAndMapNumber(inputString: String?): Result<Int> = runCatching {
 
     number
 }
+
+/**
+ * Retrieves the given input, calculate results and maps it to final string
+ * String with factorization is returned when the input is alright, otherwise error string.
+ *
+ * @param   resultNumber    number retrieved from user input
+ *
+ * @return  result string for success or error
+ * */
+private fun getResultString(resultNumber: Result<Int>): String = resultNumber
+    .map {
+        calculatePrimeFactorization(it)
+    }.getOrNull()
+    ?.joinToString(
+        separator = " * ",
+        prefix = "Prime factorization of \"${resultNumber.getOrNull()}\" is [ ",
+        postfix = " ]"
+    )
+    ?: resultNumber
+        .exceptionOrNull()
+        ?.message
+    ?: "Some magic error happened..."
 
 /**
  * Calculate prime factorization of given number. Function uses two while loop, one is nested.
